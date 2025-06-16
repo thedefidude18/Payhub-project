@@ -128,8 +128,14 @@ This is a full-stack web application built for freelancers to share secure, wate
 
 ## Changelog
 
-- June 16, 2025. Initial setup
+- June 16, 2025. Initial setup with core functionality
+- June 16, 2025. Enhanced freelancer dashboard with refined UI design
+- June 16, 2025. Added mobile navigation component for bottom navigation
+- June 16, 2025. Removed Stripe dependencies, prepared for Paystack integration
+- June 16, 2025. Added database seeding with test accounts for admin and freelancer roles
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+Design preferences: Mobile-first approach with bottom navigation on mobile devices.
+Performance requirements: Pages should load instantly like an app, not with loading states.
