@@ -1,113 +1,58 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useParams } from "wouter";
-import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { loadStripe } from '@stripe/stripe-js';
-import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { CreditCard, Shield, ArrowLeft, Check } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { CreditCard, ArrowLeft, Clock, Check } from "lucide-react";
+import type { Project, User } from "@shared/schema";
 
-if (!import.meta.env.VITE_STRIPE_PUBLIC_KEY) {
-  throw new Error('Missing required Stripe key: VITE_STRIPE_PUBLIC_KEY');
-}
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
-
-const CheckoutForm = ({ project }: { project: any }) => {
-  const stripe = useStripe();
-  const elements = useElements();
+const CheckoutForm = ({ project }: { project: Project }) => {
   const { toast } = useToast();
-  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!stripe || !elements) {
-      return;
-    }
-
-    setIsProcessing(true);
-
-    const { error } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/preview/${project.id}?payment=success`,
-      },
+  const handleNotifyInterest = () => {
+    toast({
+      title: "Interest Noted",
+      description: "Payment system will be available soon with Paystack integration.",
     });
-
-    setIsProcessing(false);
-
-    if (error) {
-      toast({
-        title: "Payment Failed",
-        description: error.message,
-        variant: "destructive",
-      });
-    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-gray-50 p-4 rounded-lg">
-        <PaymentElement />
+    <div className="space-y-6">
+      <div className="bg-yellow-50 border border-yellow-200 p-6 rounded-lg text-center">
+        <Clock className="h-12 w-12 text-yellow-600 mx-auto mb-4" />
+        <h3 className="text-lg font-semibold text-yellow-800 mb-2">Payment System Coming Soon</h3>
+        <p className="text-yellow-700 mb-4">
+          We're integrating Paystack for secure payments. This feature will be available shortly.
+        </p>
       </div>
       
       <Button 
-        type="submit" 
+        onClick={handleNotifyInterest}
         className="w-full" 
         size="lg"
-        disabled={!stripe || !elements || isProcessing}
+        variant="outline"
       >
         <CreditCard className="h-4 w-4 mr-2" />
-        {isProcessing ? "Processing..." : `Pay $${project.price}`}
+        Notify Me When Payment is Ready
       </Button>
-    </form>
+    </div>
   );
 };
 
 export default function Checkout() {
   const { projectId } = useParams();
-  const { toast } = useToast();
-  const [clientSecret, setClientSecret] = useState("");
 
-  const { data: project, isLoading } = useQuery({
+  const { data: project, isLoading } = useQuery<Project>({
     queryKey: [`/api/projects/${projectId}`],
     enabled: !!projectId,
   });
 
-  const { data: freelancer } = useQuery({
+  const { data: freelancer } = useQuery<User>({
     queryKey: [`/api/users/subdomain/${window.location.hostname.split('.')[0]}`],
     enabled: !!window.location.hostname.includes('.'),
   });
-
-  const createPaymentIntentMutation = useMutation({
-    mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/create-payment-intent", {
-        projectId,
-        amount: parseFloat(project.price),
-      });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      setClientSecret(data.clientSecret);
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  useEffect(() => {
-    if (project && project.status === 'approved') {
-      createPaymentIntentMutation.mutate();
-    }
-  }, [project]);
 
   if (isLoading) {
     return (
@@ -152,17 +97,6 @@ export default function Checkout() {
     );
   }
 
-  if (!clientSecret) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4" />
-          <p className="text-gray-600">Setting up payment...</p>
-        </div>
-      </div>
-    );
-  }
-
   const commissionAmount = (parseFloat(project.price) * parseFloat(project.commissionRate)) / 100;
   const freelancerAmount = parseFloat(project.price) - commissionAmount;
 
@@ -200,24 +134,7 @@ export default function Checkout() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <Elements stripe={stripePromise} options={{ clientSecret }}>
-                  <CheckoutForm project={project} />
-                </Elements>
-              </CardContent>
-            </Card>
-
-            {/* Security Notice */}
-            <Card className="mt-6 bg-blue-50 border-blue-200">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-3">
-                  <Shield className="h-8 w-8 text-blue-600" />
-                  <div>
-                    <h3 className="font-medium text-blue-900">Secure Payment</h3>
-                    <p className="text-blue-800 text-sm">
-                      Your payment is processed securely by Stripe. We never store your card information.
-                    </p>
-                  </div>
-                </div>
+                <CheckoutForm project={project} />
               </CardContent>
             </Card>
           </div>
@@ -274,10 +191,10 @@ export default function Checkout() {
                 <div className="bg-gray-50 p-4 rounded-lg mt-6">
                   <h4 className="font-medium mb-2 flex items-center gap-2">
                     <Check className="h-4 w-4 text-green-600" />
-                    What happens next?
+                    What will happen when payment is ready?
                   </h4>
                   <ul className="text-sm text-gray-600 space-y-1">
-                    <li>• Payment is processed securely</li>
+                    <li>• Payment will be processed securely with Paystack</li>
                     <li>• You'll receive an email confirmation</li>
                     <li>• Files will be delivered to your email</li>
                     <li>• Freelancer will be notified of payment</li>
