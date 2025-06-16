@@ -1,9 +1,44 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Play, Globe, Shield, MessageSquare, CreditCard, BarChart3, Users, Crown, Star, CheckCircle } from "lucide-react";
+import { Play, Globe, Shield, MessageSquare, CreditCard, BarChart3, Users, Crown, Star, CheckCircle, User, Copy, LogIn } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Landing() {
+  const { toast } = useToast();
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied to clipboard",
+      description: "Email address copied for testing",
+    });
+  };
+
+  const testAccounts = [
+    {
+      role: "Admin",
+      email: "admin@payvidi.com",
+      icon: Shield,
+      color: "bg-red-100 text-red-700",
+      description: "Full platform access and user management"
+    },
+    {
+      role: "Freelancer",
+      email: "freelancer@payvidi.com", 
+      icon: User,
+      color: "bg-blue-100 text-blue-700",
+      description: "Create projects and manage client work"
+    },
+    {
+      role: "Super Freelancer",
+      email: "super@payvidi.com",
+      icon: Crown,
+      color: "bg-yellow-100 text-yellow-700",
+      description: "Advanced features and lower commission rates"
+    }
+  ];
+
   const features = [
     {
       icon: Globe,
@@ -226,6 +261,65 @@ export default function Landing() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Test Credentials Section */}
+      <section className="py-16 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              Test the Platform
+            </h2>
+            <p className="text-lg text-gray-600">
+              Use these seeded accounts to explore different user roles and features
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {testAccounts.map((account) => {
+              const Icon = account.icon;
+              return (
+                <Card key={account.role} className="hover:shadow-lg transition-shadow">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${account.color}`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      {account.role}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-sm text-gray-600">{account.description}</p>
+                    <div className="flex items-center justify-between bg-gray-50 p-3 rounded-lg">
+                      <span className="text-sm font-mono text-gray-800">{account.email}</span>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => copyToClipboard(account.email)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <Button 
+                      className="w-full" 
+                      onClick={() => window.location.href = '/api/login'}
+                    >
+                      <LogIn className="h-4 w-4 mr-2" />
+                      Login with {account.role}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+          
+          <div className="mt-8 text-center">
+            <p className="text-sm text-gray-500">
+              Click "Login with [Role]" and sign in using the Replit Auth system to test the platform
+            </p>
           </div>
         </div>
       </section>
