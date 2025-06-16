@@ -1,0 +1,74 @@
+Build a web application called PayVidi that allows freelancers and digital creators to securely share file previews with clients. Clients must approve previews and make payments before receiving the final download links via email. The platform must also support freelancer subdomains, payment integration, and a preview timeline with client feedback features.
+
+⸻
+
+User Roles
+ 1. Admin (Platform Owner)
+ 2. Freelancer (Creator registered on PayVidi)
+ 3. Client (Receives previews, gives feedback, pays to download)
+
+⸻
+
+Core Features
+
+1. Admin Panel
+ • Create, manage, and suspend freelancer accounts
+ • View total earnings, commissions per transaction
+ • Approve or reject freelancer subdomain requests
+ • Configure payment settings and transaction limits
+ • Access logs of preview interactions and download deliveries
+
+2. Freelancer Subdomain + Dashboard
+ • Custom subdomain: e.g., designer.payvidi.com
+ • Dashboard to manage projects and clients
+ • Upload files with optional watermarks or limited previews
+ • Set pricing, preview visibility rules, and deadlines
+ • Track feedback/comments from clients
+ • See payment status and client interactions in real time
+ • Commission breakdowns for each transaction
+
+3. Preview File System
+ • Upload preview versions of files (videos, music, images, PDFs)
+ • Automatically generate a secure preview URL
+ • Timeline-based commenting: clients can click on a specific time in the video/audio or section in PDF/image and leave a comment
+ • Track which clients have viewed which previews
+ • Client cannot view approved previews again (they become locked)
+ • Indicate whether preview is final or draft
+
+4. Client Preview Experience
+ • View file preview on a clean interface
+ • Add comments or replies on the preview timeline
+ • Approve preview when satisfied
+ • Once approved, the preview is hidden from the client
+ • Initiate payment after approval
+ • Upon successful payment, a secure link is emailed with the full file download
+
+5. Payment System
+ • Supports card payments, bank transfer, or wallet (configurable)
+ • Generates payment invoice/receipt
+ • Sends download link via email after payment confirmation
+ • PayVidi deducts a commission (set by admin) before crediting freelancer
+
+6. Security & Delivery
+ • Download link is time-limited and IP-restricted (optional)
+ • Files stored securely with download access only post-payment
+ • Email notifications on file access, approvals, payments
+
+⸻
+
+Additional Considerations
+ • Mobile-friendly/responsive UI
+ • Optional authentication for clients (email-only or full account)
+ • Notification system (email + in-app)
+ • Multi-language support (future feature)
+ • Integration-ready APIs for freelance platforms (optional)
+
+⸻
+
+Tech Stack Suggestions (Optional)
+ • Frontend: React / Vue.js
+ • Backend: Node.js / Laravel / Django
+ • Storage: AWS S3 / Cloudinary
+ • Payment: Paystack, Stripe, Flutterwave
+ • Database: PostgreSQL or MongoDB
+ • Subdomains: Dynamic routing using Nginx / Caddy / Vercel / Netlify + wildcard DNS
