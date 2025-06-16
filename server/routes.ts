@@ -1,20 +1,12 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import Stripe from "stripe";
+import express from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertProjectSchema, insertFileSchema, insertCommentSchema } from "@shared/schema";
-
-if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error('Missing required Stripe secret: STRIPE_SECRET_KEY');
-}
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2023-10-16",
-});
 
 // Configure multer for file uploads
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -34,7 +26,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
 
   // Serve uploaded files
-  app.use('/uploads', require('express').static(uploadDir));
+  app.use('/uploads', express.static(uploadDir));
 
   // Auth routes
   app.get('/api/auth/user', async (req: any, res) => {
@@ -240,86 +232,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Payment routes
-  app.post("/api/create-payment-intent", async (req, res) => {
-    try {
-      const { projectId, amount } = req.body;
-      
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: Math.round(amount * 100), // Convert to cents
-        currency: "usd",
-        metadata: { projectId },
-      });
-
-      // Update project with payment intent ID
-      await storage.updateProject(projectId, {
-        paymentIntentId: paymentIntent.id,
-      });
-
-      res.json({ clientSecret: paymentIntent.client_secret });
-    } catch (error: any) {
-      console.error("Error creating payment intent:", error);
-      res.status(500).json({ message: "Error creating payment intent: " + error.message });
-    }
-  });
-
-  app.post("/api/payments/webhook", async (req, res) => {
-    try {
-      const sig = req.headers['stripe-signature'];
-      let event;
-
-      try {
-        event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET!);
-      } catch (err: any) {
-        console.log(`Webhook signature verification failed.`, err.message);
-        return res.status(400).send(`Webhook Error: ${err.message}`);
-      }
-
-      if (event.type === 'payment_intent.succeeded') {
-        const paymentIntent = event.data.object;
-        const projectId = paymentIntent.metadata.projectId;
-
-        if (projectId) {
-          const project = await storage.getProject(projectId);
-          if (project) {
-            // Calculate commission
-            const amount = parseFloat(project.price);
-            const commissionRate = parseFloat(project.commissionRate);
-            const commission = (amount * commissionRate) / 100;
-            const netAmount = amount - commission;
-
-            // Create payment record
-            await storage.createPayment({
-              projectId,
-              freelancerId: project.freelancerId,
-              amount: project.price,
-              commission: commission.toString(),
-              netAmount: netAmount.toString(),
-              stripePaymentIntentId: paymentIntent.id,
-              status: 'succeeded',
-              clientEmail: project.clientEmail,
-              metadata: { paymentIntent },
-            });
-
-            // Update project status
-            await storage.updateProjectStatus(projectId, 'paid');
-
-            // Create analytics event
-            await storage.createAnalyticsEvent({
-              projectId,
-              event: 'payment_succeeded',
-              metadata: { amount, commission, netAmount },
-            });
-          }
-        }
-      }
-
-      res.json({ received: true });
-    } catch (error) {
-      console.error("Webhook error:", error);
-      res.status(500).json({ message: "Webhook error" });
-    }
-  });
+  // Payment routes - TODO: Implement with Paystack later
 
   // Admin routes
   app.get('/api/admin/users', isAuthenticated, async (req: any, res) => {

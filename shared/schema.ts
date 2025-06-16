@@ -93,7 +93,7 @@ export const comments = pgTable("comments", {
   timestamp: integer("timestamp"), // for video/audio timeline position
   position: jsonb("position"), // for image coordinates or PDF page/position
   isResolved: boolean("is_resolved").default(false),
-  parentId: uuid("parent_id").references(() => comments.id), // for replies
+  parentId: uuid("parent_id"), // for replies - self-reference will be added in relations
   createdAt: timestamp("created_at").defaultNow(),
 });
 

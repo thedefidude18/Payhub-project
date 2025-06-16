@@ -215,11 +215,11 @@ export class DatabaseStorage implements IStorage {
 
   // Analytics operations
   async createAnalyticsEvent(analyticsData: InsertAnalytics): Promise<Analytics> {
-    const [analytics] = await db
+    const [newAnalytics] = await db
       .insert(analytics)
       .values(analyticsData)
       .returning();
-    return analytics;
+    return newAnalytics;
   }
 
   async getProjectAnalytics(projectId: string): Promise<Analytics[]> {
