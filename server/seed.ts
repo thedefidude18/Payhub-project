@@ -1,10 +1,32 @@
 import { db } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+
+async function seedSupabaseAuthUsers() {
+  // Admin
+  await supabase.auth.admin.createUser({
+    email: "admin@payvidi.com",
+    password: "admin1234",
+    user_metadata: { role: "admin", firstName: "Admin", lastName: "User" },
+    email_confirm: true,
+  });
+  // Freelancer
+  await supabase.auth.admin.createUser({
+    email: "freelancer@payvidi.com",
+    password: "freelancer1234",
+    user_metadata: { role: "freelancer", firstName: "John", lastName: "Freelancer" },
+    email_confirm: true,
+  });
+}
 
 export async function seedDatabase() {
   try {
     console.log("Seeding database...");
+
+    await seedSupabaseAuthUsers();
 
     // Seed admin user
     const adminExists = await db.select().from(users).where(eq(users.id, "admin-seed-123"));

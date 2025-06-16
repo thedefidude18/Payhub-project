@@ -5,8 +5,8 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertProjectSchema, insertFileSchema, insertCommentSchema } from "@shared/schema";
+import { supabase } from "./supabaseClient";
 
 // Configure multer for file uploads
 const uploadDir = path.join(process.cwd(), 'uploads');
@@ -21,21 +21,39 @@ const upload = multer({
   },
 });
 
+// Supabase Auth middleware
+async function supabaseAuthMiddleware(req, res, next) {
+  const token = req.headers["authorization"]?.replace("Bearer ", "");
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data?.user) {
+    req.user = null;
+    return next();
+  }
+  req.user = data.user;
+  next();
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
+  app.use(supabaseAuthMiddleware);
+
   // Auth middleware
-  await setupAuth(app);
+  // await setupAuth(app);
 
   // Serve uploaded files
   app.use('/uploads', express.static(uploadDir));
 
   // Auth routes
   app.get('/api/auth/user', async (req: any, res) => {
-    if (!req.isAuthenticated()) {
+    if (!req.user) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     try {
-      const userId = req.user.claims.sub;
+      const userId = req.user.id;
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -58,9 +76,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.patch('/api/users/:id/role', isAuthenticated, async (req: any, res) => {
+  app.patch('/api/users/:id/role', async (req: any, res) => {
     try {
-      const currentUser = await storage.getUser(req.user.claims.sub);
+      const currentUser = await storage.getUser(req.user.id);
       if (currentUser?.role !== 'admin') {
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -75,11 +93,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Project routes
-  app.post('/api/projects', isAuthenticated, async (req: any, res) => {
+  app.post('/api/projects', async (req: any, res) => {
     try {
       const projectData = insertProjectSchema.parse({
         ...req.body,
-        freelancerId: req.user.claims.sub,
+        freelancerId: req.user.id,
       });
 
       const project = await storage.createProject(projectData);
@@ -90,9 +108,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/projects', isAuthenticated, async (req: any, res) => {
+  app.get('/api/projects', async (req: any, res) => {
     try {
-      const projects = await storage.getProjectsByFreelancer(req.user.claims.sub);
+      const projects = await storage.getProjectsByFreelancer(req.user.id);
       res.json(projects);
     } catch (error) {
       console.error("Error fetching projects:", error);
@@ -135,7 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // File routes
-  app.post('/api/projects/:projectId/files', isAuthenticated, upload.single('file'), async (req: any, res) => {
+  app.post('/api/projects/:projectId/files', upload.single('file'), async (req: any, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
@@ -222,7 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/projects/:projectId/analytics', isAuthenticated, async (req, res) => {
+  app.get('/api/projects/:projectId/analytics', async (req, res) => {
     try {
       const analytics = await storage.getProjectAnalytics(req.params.projectId);
       res.json(analytics);
@@ -235,9 +253,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Payment routes - TODO: Implement with Paystack later
 
   // Admin routes
-  app.get('/api/admin/users', isAuthenticated, async (req: any, res) => {
+  app.get('/api/admin/users', async (req: any, res) => {
     try {
-      const currentUser = await storage.getUser(req.user.claims.sub);
+      const currentUser = await storage.getUser(req.user.id);
       if (currentUser?.role !== 'admin') {
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -250,9 +268,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/stats', isAuthenticated, async (req: any, res) => {
+  app.get('/api/admin/stats', async (req: any, res) => {
     try {
-      const currentUser = await storage.getUser(req.user.claims.sub);
+      const currentUser = await storage.getUser(req.user.id);
       if (currentUser?.role !== 'admin') {
         return res.status(403).json({ message: "Forbidden" });
       }
@@ -266,10 +284,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Admin routes
-  app.get('/api/admin/users', isAuthenticated, async (req: any, res) => {
+  app.get('/api/admin/users', async (req: any, res) => {
     try {
-      if (req.user.claims.sub) {
-        const currentUser = await storage.getUser(req.user.claims.sub);
+      if (req.user.id) {
+        const currentUser = await storage.getUser(req.user.id);
         if (currentUser?.role !== 'admin') {
           return res.status(403).json({ message: "Admin access required" });
         }
@@ -283,10 +301,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/projects', isAuthenticated, async (req: any, res) => {
+  app.get('/api/admin/projects', async (req: any, res) => {
     try {
-      if (req.user.claims.sub) {
-        const currentUser = await storage.getUser(req.user.claims.sub);
+      if (req.user.id) {
+        const currentUser = await storage.getUser(req.user.id);
         if (currentUser?.role !== 'admin') {
           return res.status(403).json({ message: "Admin access required" });
         }
@@ -300,10 +318,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/admin/stats', isAuthenticated, async (req: any, res) => {
+  app.get('/api/admin/stats', async (req: any, res) => {
     try {
-      if (req.user.claims.sub) {
-        const currentUser = await storage.getUser(req.user.claims.sub);
+      if (req.user.id) {
+        const currentUser = await storage.getUser(req.user.id);
         if (currentUser?.role !== 'admin') {
           return res.status(403).json({ message: "Admin access required" });
         }
