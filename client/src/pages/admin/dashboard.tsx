@@ -48,24 +48,41 @@ export default function AdminDashboard() {
   const pendingProjects = Array.isArray(projects) ? projects.filter((p: any) => p.status === 'pending').length : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white pb-20 md:pb-0">
-      <Navbar />
-      
-      <div className="flex">
-        {/* Admin Sidebar */}
-        <div className="hidden lg:flex lg:w-72 lg:flex-col">
-          <div className="flex flex-col flex-grow pt-5 pb-4 overflow-y-auto bg-gradient-to-b from-gray-800 to-gray-900 border-r border-gray-700">
-            <div className="flex items-center flex-shrink-0 px-6 mb-8">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl flex items-center justify-center">
-                  <Shield className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-white">Admin Panel</h2>
-                  <p className="text-xs text-gray-400">Platform Management</p>
-                </div>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white flex">
+      {/* Fixed Admin Sidebar */}
+      <div className="fixed left-0 top-0 h-full w-80 z-10 hidden lg:flex flex-col bg-gradient-to-b from-gray-800 to-gray-900 border-r border-gray-700 shadow-2xl">
+        {/* Admin Header in Sidebar */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-700 bg-gradient-to-r from-gray-800 to-gray-700">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl flex items-center justify-center ring-2 ring-red-400/30">
+              <Shield className="h-7 w-7 text-white" />
             </div>
+            <div>
+              <h1 className="text-lg font-bold text-white">
+                Welcome, {user.firstName || 'Admin'}
+              </h1>
+              <p className="text-xs text-gray-400 flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                Platform Administrator
+              </p>
+            </div>
+          </div>
+          <Button size="sm" className="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md hover:shadow-lg transition-shadow">
+            <Settings className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Platform Status in Sidebar */}
+        <div className="px-6 py-4 bg-gradient-to-r from-gray-800/50 to-purple-800/20 border-b border-gray-700">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-300">System Status</span>
+            <span className="text-sm font-bold text-green-400">Operational</span>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-green-300">
+            <CheckCircle className="h-3 w-3" />
+            All systems running smoothly
+          </div>
+        </div>
             
             <nav className="flex-1 px-4 space-y-2">
               <div className="mb-6">

@@ -317,9 +317,23 @@ export default function Landing() {
           </div>
           
           <div className="mt-8 text-center">
-            <p className="text-sm text-gray-500">
-              Click "Login with [Role]" and sign in using the Replit Auth system to test the platform
+            <p className="text-sm text-gray-500 mb-4">
+              Click "Login as [Role]" and sign in using the Replit Auth system to test the platform
             </p>
+            <div className="flex justify-center gap-4">
+              <a 
+                href="/api/login" 
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+              >
+                Direct Admin Login
+              </a>
+              <a 
+                href="/api/login" 
+                className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+              >
+                Direct Freelancer Login
+              </a>
+            </div>
           </div>
         </div>
       </section>
