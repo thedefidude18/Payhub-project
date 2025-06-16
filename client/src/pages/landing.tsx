@@ -305,10 +305,10 @@ export default function Landing() {
                     </div>
                     <Button 
                       className="w-full" 
-                      onClick={() => window.location.href = '/api/login'}
+                      onClick={() => window.location.href = `/api/login?role=${account.role.toLowerCase()}`}
                     >
                       <LogIn className="h-4 w-4 mr-2" />
-                      Login with {account.role}
+                      Login as {account.role}
                     </Button>
                   </CardContent>
                 </Card>
