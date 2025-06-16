@@ -5,7 +5,22 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, DollarSign, Eye, MessageSquare, Plus, Crown } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  FileText, 
+  DollarSign, 
+  Eye, 
+  MessageSquare, 
+  Plus, 
+  Crown, 
+  TrendingUp, 
+  Clock, 
+  CheckCircle,
+  AlertCircle,
+  ArrowUpRight,
+  Calendar
+} from "lucide-react";
 import { Link } from "wouter";
 import Navbar from "@/components/layout/navbar";
 
@@ -39,41 +54,92 @@ export default function FreelancerDashboard() {
 
   if (isLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center">
+          <div className="animate-spin w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-gray-600">Loading your dashboard...</p>
+        </div>
       </div>
     );
   }
 
-  const recentProjects = projects?.slice(0, 5) || [];
+  const recentProjects = projects?.slice(0, 4) || [];
   const totalEarnings = payments?.reduce((sum: number, payment: any) => sum + parseFloat(payment.netAmount), 0) || 0;
   const pendingProjects = projects?.filter((p: any) => p.status === 'preview' || p.status === 'draft').length || 0;
   const completedProjects = projects?.filter((p: any) => p.status === 'delivered').length || 0;
+  const approvedProjects = projects?.filter((p: any) => p.status === 'approved').length || 0;
+  
+  // Calculate completion rate
+  const totalProjects = projects?.length || 0;
+  const completionRate = totalProjects > 0 ? (completedProjects / totalProjects) * 100 : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <Navbar />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-              Welcome back, {user.firstName || user.email}
-              {user.role === 'superfreelancer' && (
-                <Badge className="bg-yellow-500 text-white">
-                  <Crown className="h-3 w-3 mr-1" />
-                  Super
-                </Badge>
-              )}
-            </h1>
-            <p className="mt-2 text-gray-600">Manage your projects and track your earnings</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Enhanced Header with Profile */}
+        <div className="mb-8">
+          <div className="bg-white rounded-2xl shadow-sm border p-6">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-16 w-16 ring-4 ring-blue-100">
+                  <AvatarImage src={user.profileImageUrl} />
+                  <AvatarFallback className="bg-blue-600 text-white text-xl font-semibold">
+                    {(user.firstName?.[0] || user.email[0]).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    Welcome back, {user.firstName || user.email.split('@')[0]}
+                    {user.role === 'superfreelancer' && (
+                      <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0">
+                        <Crown className="h-3 w-3 mr-1" />
+                        Super
+                      </Badge>
+                    )}
+                  </h1>
+                  <p className="text-gray-600 flex items-center gap-2 mt-1">
+                    <Calendar className="h-4 w-4" />
+                    {new Date().toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Link href="/freelancer/upload">
+                  <Button className="bg-blue-600 hover:bg-blue-700 shadow-lg">
+                    <Plus className="h-4 w-4 mr-2" />
+                    New Project
+                  </Button>
+                </Link>
+              </div>
+            </div>
+            
+            {/* Quick Stats Bar */}
+            <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">{totalProjects}</div>
+                <div className="text-sm text-gray-500">Total Projects</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">${totalEarnings.toFixed(0)}</div>
+                <div className="text-sm text-gray-500">Total Earnings</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-orange-600">{pendingProjects}</div>
+                <div className="text-sm text-gray-500">Pending</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-purple-600">{completionRate.toFixed(0)}%</div>
+                <div className="text-sm text-gray-500">Completion</div>
+              </div>
+            </div>
           </div>
-          <Link href="/freelancer/upload">
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              New Project
-            </Button>
-          </Link>
         </div>
 
         {/* Stats Overview */}
